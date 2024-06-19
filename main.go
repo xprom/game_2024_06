@@ -13,6 +13,7 @@ type Map struct {
 	Obsticles []Position `json:"obsticles"`
 }
 
+// привет, Анастасия
 type Position struct {
 	X int `json:"x"`
 	Y int `json:"y"`
