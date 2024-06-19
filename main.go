@@ -21,6 +21,11 @@ type Position struct {
 
 // isClearPoint проверяем есть ли препятствие на указанной клетке
 func isClearPoint(x, y int, gameMap Map) bool {
+	/// сделал много изменений тут
+	/// правки никто еще не видел и не проверял, я хочу просто их показать
+	///
+	///
+	/// ////
 	for _, obsticel := range gameMap.Obsticles {
 		if obsticel.X == x && obsticel.Y == y {
 			return false
