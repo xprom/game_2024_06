@@ -14,6 +14,7 @@ type Map struct {
 }
 
 // привет, Анастасия
+// привет
 type Position struct {
 	X int `json:"x"`
 	Y int `json:"y"`
