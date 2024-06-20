@@ -26,7 +26,7 @@ func isClearPoint(x, y int, gameMap Map) bool {
 	/// правки никто еще не видел и не проверял, я хочу просто их показать
 	///
 	///
-	/// ////
+	/// ////z
 	for _, obsticel := range gameMap.Obsticles {
 		if obsticel.X == x && obsticel.Y == y {
 			return false
