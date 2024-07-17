@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-
 	term "github.com/nsf/termbox-go"
+	"os"
+	"time"
 )
 
 type Map struct {
@@ -36,9 +36,21 @@ func isClearPoint(x, y int, gameMap Map) bool {
 	return true
 }
 
-func drawGameField(playerPositionX, playerPositionY int, gameMap Map) {
+func drawGameField(playerPositionX, playerPositionY int, gameMap Map, bullets []*Bullet) {
 	for i := 0; i < 100; i++ {
 		for j := 0; j < 100; j++ {
+			isBulletsFound := false
+			for _, b := range bullets {
+				if b.x == i && b.y == j {
+					term.SetCell(j, i, '.', 0, term.ColorLightBlue)
+					isBulletsFound = true
+				}
+			}
+
+			if isBulletsFound {
+				continue
+			}
+
 			if playerPositionX == i && playerPositionY == j {
 				term.SetCell(j, i, '*', 0, term.ColorGreen)
 			} else {
@@ -52,7 +64,25 @@ func drawGameField(playerPositionX, playerPositionY int, gameMap Map) {
 	}
 }
 
+type Bullet struct {
+	x         int
+	y         int
+	direction string // пока не используем
+}
+
+// обновляет позицию пули
+func (b *Bullet) fly() bool {
+	b.y = b.y + 1
+	if b.y > 100 {
+		return false
+	}
+
+	return true
+}
+
 func main() {
+	bulletesOnFiled := make([]*Bullet, 0)
+
 	file, err := os.Open("map.json")
 	if err != nil {
 		panic(err)
@@ -71,12 +101,31 @@ func main() {
 		panic(err)
 	}
 	defer term.Close()
+	// стартовые координаты игрока
 	x := 0
 	y := 0
-	drawGameField(x, y, gameMap)
+	drawGameField(x, y, gameMap, bulletesOnFiled)
 	if err := term.Sync(); err != nil {
 		panic(err)
 	}
+
+	// запускаем фоновый процесс обновления позиций пуль на карте
+	go func() {
+		for {
+			time.Sleep(time.Millisecond * 100)
+			if len(bulletesOnFiled) == 0 {
+				continue
+			}
+
+			for _, b := range bulletesOnFiled {
+				b.fly()
+			}
+			drawGameField(x, y, gameMap, bulletesOnFiled)
+			if err := term.Sync(); err != nil {
+				panic(err)
+			}
+		}
+	}()
 
 	for {
 		switch ev := term.PollEvent(); ev.Type {
@@ -84,28 +133,34 @@ func main() {
 			switch ev.Key {
 			case term.KeyArrowRight:
 				y++
-				drawGameField(x, y, gameMap)
+				drawGameField(x, y, gameMap, bulletesOnFiled)
 				if err := term.Sync(); err != nil {
 					panic(err)
 				}
 			case term.KeyArrowLeft:
 				y--
-				drawGameField(x, y, gameMap)
+				drawGameField(x, y, gameMap, bulletesOnFiled)
 				if err := term.Sync(); err != nil {
 					panic(err)
 				}
 			case term.KeyArrowDown:
 				x++
-				drawGameField(x, y, gameMap)
+				drawGameField(x, y, gameMap, bulletesOnFiled)
 				if err := term.Sync(); err != nil {
 					panic(err)
 				}
 			case term.KeyArrowUp:
 				x--
-				drawGameField(x, y, gameMap)
+				drawGameField(x, y, gameMap, bulletesOnFiled)
 				if err := term.Sync(); err != nil {
 					panic(err)
 				}
+			case term.KeySpace:
+				bulletesOnFiled = append(bulletesOnFiled, &Bullet{
+					x:         x,
+					y:         y,
+					direction: "",
+				})
 			default:
 				term.Clear(0, 0)
 				fmt.Println("game finished")
